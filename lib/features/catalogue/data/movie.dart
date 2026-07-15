@@ -1,12 +1,12 @@
-enum Status { inCollection, onWatchlist }
+import 'movie_status.dart';
 
 class Movie {
   final String id;
   final String title;
   final int year;
   final String genre;
-  final double rating;
-  final Status status;
+  final double? rating; //rating out of 10
+  final MediaStatus status;
 
   const Movie({
     required this.id,

@@ -116,50 +116,215 @@ phase.
 
 ---
 
-## Open phase slots
+## Phase entries
 
-These are placeholders. The user (or the tutor, with the user pasting
-the phase info) populates each as work progresses.
+Each phase below has its title and Done Definition populated from
+`PROJECT_PLAN.md` §13 (Build Order) and §14 (Done Definitions). The
+Done Definitions are verbatim from §14 except for Phase 2 (no U#;
+derived from §13's "Produces" column). When you start a phase, the
+tutor references this file plus §13/§14 in `PROJECT_PLAN.md` for the
+authoritative content.
 
-### Phase 1 — [paste description]
+### Phase 0 — Tooling ✅ Done
 
-**From PROJECT_PLAN.md §13:** *(paste here)*
-**Done Definition from §14:** *(paste here)*
+**From PROJECT_PLAN.md §13:** `flutter doctor` clean; emulator
+`emulator-5554` online; default counter app launched.
 
-### Phase 2 — [paste description]
+**Done Definition (U1) from §14:**
+- `flutter doctor` clean
+- emulator-5554 online
+- default counter app launched
 
-**From PROJECT_PLAN.md §13:** *(paste here)*
-**Done Definition from §14:** *(paste here)*
+### Phase 1 — Widget fundamentals + static catalogue hub ✅ Done
 
-### Phase 3a — [paste description]
+**From PROJECT_PLAN.md §13:** Hardcoded Movies, MovieCard, HubCard,
+hub page (Collection → Collection / Bucketlist).
 
-**From PROJECT_PLAN.md §13:** *(paste here)*
-**Done Definition from §14:** *(paste here)*
+**Done Definition (U2) from §14:**
+- `lib/features/catalogue/data/movie.dart` — value object
+- `lib/features/catalogue/data/sample_movies.dart` — 5 `const Movie(...)`
+  entries + `collectedMovies` / `bucketListMovies` getters
+- `lib/features/catalogue/widgets/movie_card.dart`
+- `lib/features/catalogue/widgets/hub_card.dart`
+- `lib/features/catalogue/my_collection_page.dart`
+- `lib/features/catalogue/bucket_list_page.dart`
+- `lib/features/catalogue/catalogue_page.dart` + `main.dart` rewrite
 
-### Phase 3b — [paste description]
+**Verify:** launch → Catalogue hub shows → tap Collection card → 3
+movies visible → back → tap Bucket List card → 2 movies visible.
 
-**From PROJECT_PLAN.md §13:** *(paste here)*
-**Done Definition from §14:** *(paste here)*
+**Note on label amendment:** mid-phase, the second HubCard label was
+renamed from `'To Consume'` to `'Bucket List'`, the underlying getter
+`toConsumeMovies` was renamed to `bucketListMovies`, and the page file
+was renamed from `to_consume_page.dart` to `bucket_list_page.dart`.
+The Done Definition above mirrors §14 with the filename rename; the
+shipped code uses `'Bucket List'`. The `MediaStatus.onWatchlist` enum
+value is unchanged.
 
-### Phase 4 — [paste description]
+**Minor terminology mismatch:** §13 says `Bucketlist` (single word);
+the shipped code uses `Bucket List` (two words) and the file is
+`bucket_list_page.dart` (snake_case, Dart convention). §13 is the
+high-level overview; code and file names follow Dart conventions.
+If you want strict alignment, update `PROJECT_PLAN.md` §13 and §14 —
+your call, not Phase 1 cleanup.
 
-**From PROJECT_PLAN.md §13:** *(paste here)*
-**Done Definition from §14:** *(paste here)*
+**Per-step summary** (full prerequisite-check + review blocks were
+skipped per the user's "skip prereq quizzes for all of Phase 1"
+decision logged in the Session 1 note):
 
-### Phase 5 — [paste description]
+- 1.1 — `lib/app/theme.dart` + `lib/main.dart` rewrite: dark
+  `Material 3` via `ColorScheme.fromSeed(seedColor: Color(0xFFA8C5FF))`.
+- 1.2 — `data/movie.dart` + `data/movie_status.dart`: `Movie` value
+  object (id/title/year/genre/rating?/status), `MediaStatus` enum.
+- 1.3 — `data/sample_movies.dart`: 5 const entries + `collectedMovies`
+  + `bucketListMovies` getters.
+- 1.4 — `widgets/movie_card.dart`: `Card` + `ListTile` with
+  `title`/`subtitle`/`trailing` (status pill).
+- 1.5a — `widgets/hub_card.dart`: `Card` + `Stack` +
+  `Positioned.fill(leading)` + centered `Text(label)`.
+- 1.5c — `my_collection_page.dart`: `Scaffold` + `AppBar` +
+  `ListView.builder`.
+- 1.5d — `bucket_list_page.dart`: mirror of 1.5c with
+  `bucketListMovies`.
+- 1.5b — `catalogue_page.dart`: `Scaffold` + `Padding(all 24)` +
+  `Column` of two `Expanded(HubCard)` + image assets wired.
+- 1.5e — `main.dart` final pass: `home: const CataloguePage()`,
+  title `'Media Tracker'`.
 
-**From PROJECT_PLAN.md §13:** *(paste here)*
-**Done Definition from §14:** *(paste here)*
+**Invariants verified during review:** I-2 (status is the two-value
+enum), I-7 (no `setState` in any widget; all `StatelessWidget`),
+I-12 (Material imports from `package:flutter/material.dart` only),
+I-8/I-9 relaxed v1-wide.
 
-### Phase 6 — [paste description]
+**Drift from `05-DESIGN-SYSTEM.md` §9 "Hub page" pattern:**
+`floatingActionButton` absent and `appBar: AppBar(title: Text('Your
+Catalogue'))` present on `CataloguePage` — both deviations from the
+locked spec, user-accepted, not blockers.
 
-**From PROJECT_PLAN.md §13:** *(paste here)*
-**Done Definition from §14:** *(paste here)*
+### Phase 2 — App shell ⏳ Pending
 
-### Phase 7 — [paste description]
+**From PROJECT_PLAN.md §13:** App stays single-page (1 tab) for v1;
+`go_router` setup for future routing needs; `MediaSearchClient`
+interface defined.
 
-**From PROJECT_PLAN.md §13:** *(paste here)*
-**Done Definition from §14:** *(paste here)*
+**Done Definition from §14:** *(no U# — Phase 2's deliverables are
+fold-infrastructure for later phases. Derived from §13's "Produces"
+column. The `MediaSearchClient` interface is locked here; the Dio
+implementation, DTOs, and search repo live in Phase 3b's U4.)*
+
+**Verify:** `go_router` is configured with a single `/` route for the
+Catalogue hub. `MediaSearchClient` is an abstract class with the
+locked `search({required String query, required MediaType mediaType})`
+signature. No `dio` import under `lib/features/`.
+
+### Phase 3a — Drift data model ⏳ Pending
+
+**From PROJECT_PLAN.md §13:** `AppDatabase` with `schemaVersion = 1`;
+`media_items` + `movie_details`; 2-state enum (`onWatchlist`,
+`inCollection`) as TEXT; `EnumNameConverter<MediaType>` and
+`EnumNameConverter<MediaStatus>` wired at column level (see §4.4);
+DAOs; Drift repository tests added here.
+
+**Done Definition (U3) from §14:**
+- `lib/data/database.dart` — `AppDatabase extends GeneratedDatabase`,
+  `schemaVersion = 1`
+- `lib/data/tables/media_items.dart` — `EnumNameConverter<MediaType>`
+  and `EnumNameConverter<MediaStatus>` wired at the column level
+  (see §4.4)
+- `lib/data/tables/movie_details.dart` — joined by `media_item_id`;
+  unique partial index on `tmdb_id`
+- `MigrationStrategy.onCreate` builds both tables + indexes
+- `MigrationStrategy.onUpgrade` includes additive migration steps
+  (placeholder for v2 — no steps needed in v1)
+- `lib/data/daos/movie_dao.dart` — typed queries, including
+  `findByTmdbId(int)` for idempotency (§7.1)
+- 4-5 repository tests: insert, query, delete, migration v1→v2,
+  `findByTmdbId` returns existing row
+
+### Phase 3b — TMDB search interface ⏳ Pending
+
+**From PROJECT_PLAN.md §13:** `MediaSearchClient` abstract interface
+(locked signature); `DioMediaSearchClient` impl with API-key
+interceptor; TMDB DTOs; `SearchRepository`; idempotency on add with
+`AlreadyInCollection` exception (see §7.1); offline fallback
+(manual-entry form); API key in `lib/secrets.dart`.
+
+**Done Definition (U4) from §14:**
+- `lib/core/http/media_search_client.dart` — abstract interface with
+  locked signature: `Future<List<MediaSearchResult>> search({required String query, required MediaType mediaType})`
+- `lib/core/http/dio_media_search_client.dart` — Dio-backed v1 impl
+  with API-key interceptor; routes `/search/movie` and `/search/tv`
+  based on `mediaType`
+- `lib/core/http/tmdb/dtos.dart` — TMDB response DTOs
+- `lib/data/repositories/errors.dart` — `AlreadyInCollection` exception
+  type
+- `lib/data/repositories/search_repository.dart` — wraps
+  `MediaSearchClient`; translates `AlreadyInCollection` into
+  user-facing snackbar
+- API key source: `lib/secrets.dart` (gitignored) or env var
+- Offline fallback: manual-entry form when `MediaSearchClient` returns
+  `MediaSearchUnavailable`
+- `MediaSearchClient` is the integration point for v2's `resolveTitle`
+  import primitive (free-text title → `tmdb_id` lookup). v1 interface
+  signature is forward-compatible; no v1 refactor needed.
+
+### Phase 4 — Riverpod over drift ⏳ Pending
+
+**From PROJECT_PLAN.md §13:** `databaseProvider`,
+`moviesListProvider`, `searchProvider`; CRUD via providers; provider
+tests added here.
+
+**Done Definition (U5) from §14:**
+- `lib/providers/database_provider.dart`
+- `lib/providers/movies_list_provider.dart`
+- `lib/providers/search_provider.dart`
+- 2-3 provider tests via `ProviderContainer.test`
+
+### Phase 5 — Full CRUD UI (Movies only) ⏳ Pending
+
+**From PROJECT_PLAN.md §13:** Add / Edit / Delete on Movies; TMDB
+search page; results grid; AddSheet; widget tests. **No TV Shows
+mirror in v1.**
+
+**Done Definition (U6) from §14:**
+- SearchPage → SearchResultsPage → AddSheet flow
+- Edit sheet (tap MovieCard → EditSheet)
+- Delete confirmation
+- Pull-to-refresh scaffold
+- Offline behavior verified manually
+- 3-4 widget tests
+
+### Phase 6 — Polish ⏳ Pending
+
+**From PROJECT_PLAN.md §13:** Material 3 theme + custom seed +
+typography ramp; empty states; offline UX; accessibility; error
+states; optional integration test.
+
+**Done Definition (U8) from §14:**
+- Material 3 theme finalized
+- Single seed color locked; dark theme shipped in v1, light palette
+  derived from the same seed via `ColorScheme.fromSeed(seedColor: …,
+  brightness: Brightness.light)` but not shipped
+- Typography ramp: Source Serif 4 (display/headline) + Inter
+  (title/body/label) via `google_fonts`
+- Material Symbols Rounded font bundled as asset;
+  `IconData(fontFamily: 'MaterialSymbolsRounded', fontPackage: …)`
+  used everywhere
+- Spacing scale locked (8px baseline, 12px card padding, 16px gaps,
+  12dp card radius)
+- Dark theme verified
+- Empty-state widgets
+- Accessibility pass (semantics labels, focus order)
+
+### Phase 7 — Wrap-up ⏳ Pending
+
+**From PROJECT_PLAN.md §13:** `ROADMAP.md` documents v2 features;
+Supabase plan; multi-user migration plan; one retrospective on locked
+decisions vs. hunches.
+
+**Done Definition (U9) from §14:**
+- `ROADMAP.md` documents v2 features + Supabase plan + migration plan
+- One retrospective on locked decisions vs. original hunches
 
 ### Phase 8 — [paste description]
 

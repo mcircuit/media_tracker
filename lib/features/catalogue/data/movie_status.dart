@@ -1,0 +1,1 @@
+enum MediaStatus { onWatchlist, inCollection }
