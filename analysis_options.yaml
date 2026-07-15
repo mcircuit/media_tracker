@@ -1,0 +1,31 @@
+# v1-wide I-5/I-6/I-12 learning-mode exception:
+# the four import_lint rules that previously enforced layer boundaries
+# (no dio in features, no drift in features, Material-only, etc.)
+# have been removed. The `plugins: import_lint` declaration is also
+# removed because the plugin crashes when no rules are defined. The
+# tutor enforces the four invariants in chat per the Norms Ladder in
+# agent_docs_tutor/07-TUTOR-PROTOCOL.md. You will re-add the plugin
+# and rules during v2 cleanup when the CI scripts return.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-raw-types: true
+  errors:
+    invalid_assignment: error
+    missing_return: error
+    sort_pub_dependencies: ignore
+  exclude:
+    - "**/*.g.dart"
+
+formatter:
+  page_width: 100
+  trailing_commas: preserve
+
+linter:
+  rules:
+    directives_ordering: true
+    prefer_relative_imports: true
+    prefer_single_quotes: true
+    unnecessary_late: true
