@@ -931,6 +931,7 @@ review of the original plan. Each is locked at the time of writing.
 | D26 | Backend mega-database lives on Supabase | `media_universe` table on Supabase Postgres, populated by ETL pipeline from each provider in §4.3. App queries via PostgREST/Realtime; falls back to provider APIs on miss. Strict separation from local `media_items` (§4.5). Join key: per-type external id columns. D12 is expanded: Supabase hosts both auth and the mega-DB. |
 | D27 | `resolveTitle` signature deferred to v2 | `MediaSearchClient` (§U4) is the integration point; actual `resolveTitle(String) → ...` signature is locked at v2 planning when the import pipeline shape is concrete. v1 interface is forward-compatible. |
 | D28 | `MediaType` enum v1 | Only `MediaType.movie` is valid in v1. `EnumNameConverter<MediaType>` wired at column level (see §4.4). Extension to `tv_show`, `anime`, etc. in v2 via the converter; no schema change required for `media_items.type` since it is plain TEXT. |
+| D29 | Routing library | `go_router` (verified publisher `flutter.dev`). Last release: 49 days ago, v17.3.0. Reason: Flutter Favorite; feature-complete; declarative routing. v1 ships a single `/` route (single-page per D3); v2 uses nested routes + deep links. License: BSD-3-Clause. |
 
 ---
 

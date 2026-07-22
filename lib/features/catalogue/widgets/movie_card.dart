@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../data/movie.dart';
-import '../data/movie_status.dart';
+import '../../../data/movie.dart';
+import '../../../data/movie_status.dart';
+
+// Creates a placeholder widget for the media item's data in a card form
 
 class MovieCard extends StatelessWidget {
   final Movie movie;
@@ -8,6 +10,7 @@ class MovieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // For every call, the colorscheme is decided based on the media item's status
     final badgeColor = movie.status == MediaStatus.inCollection
         ? Theme.of(context).colorScheme.secondary
         : Theme.of(context).colorScheme.primary;
@@ -16,7 +19,7 @@ class MovieCard extends StatelessWidget {
         ? Theme.of(context).colorScheme.onSecondary
         : Theme.of(context).colorScheme.onPrimary;
 
-    final badgeLabel = movie.status == MediaStatus.inCollection ? 'Collection' : 'To Consume';
+    final badgeLabel = movie.status == MediaStatus.inCollection ? 'Collection' : 'Bucket List';
 
     return Card(
       color: Theme.of(context).colorScheme.surface,

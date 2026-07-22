@@ -1,0 +1,1 @@
+class MediaSearchUnavailable implements Exception {}
