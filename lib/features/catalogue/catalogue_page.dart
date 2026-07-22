@@ -4,6 +4,7 @@ import 'bucket_list_page.dart';
 import 'my_collection_page.dart';
 import 'widgets/hub_card.dart';
 
+// The Catalogue Main Screen showing buttons leading into the users collection & bucketlist
 class CataloguePage extends StatelessWidget {
   const CataloguePage({super.key});
   @override

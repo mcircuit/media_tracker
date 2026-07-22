@@ -201,7 +201,7 @@ I-8/I-9 relaxed v1-wide.
 Catalogue'))` present on `CataloguePage` — both deviations from the
 locked spec, user-accepted, not blockers.
 
-### Phase 2 — App shell ⏳ Pending
+### Phase 2 — App shell ✅ Done
 
 **From PROJECT_PLAN.md §13:** App stays single-page (1 tab) for v1;
 `go_router` setup for future routing needs; `MediaSearchClient`
@@ -212,10 +212,43 @@ fold-infrastructure for later phases. Derived from §13's "Produces"
 column. The `MediaSearchClient` interface is locked here; the Dio
 implementation, DTOs, and search repo live in Phase 3b's U4.)*
 
-**Verify:** `go_router` is configured with a single `/` route for the
-Catalogue hub. `MediaSearchClient` is an abstract class with the
+**Verify:** `go_router` is configured with a single `/` route for
+the Catalogue hub. `MediaSearchClient` is an abstract class with the
 locked `search({required String query, required MediaType mediaType})`
 signature. No `dio` import under `lib/features/`.
+
+**Per-step summary:**
+
+- 2.1 — `pubspec.yaml` (go_router 17.3.0) + `lib/core/http/media_type.dart`,
+  `media_search_result.dart`, `errors.dart` (supporting types for
+  the `MediaSearchClient` interface).
+- 2.2 — `lib/core/http/media_search_client.dart` (abstract class per I-11).
+- 2.3 — `lib/app/router.dart` (GoRouter config, single `/` route).
+- 2.4 — `lib/main.dart` (`MaterialApp.router(routerConfig: buildAppRouter())`).
+
+**Invariants verified during review:** I-4 (`go_router` row D29 added
+to `PROJECT_PLAN.md` §16 before `flutter pub add`), I-11 (locked
+signature exact), I-12 (Material imports only from
+`package:flutter/material.dart`), I-8/I-9 relaxed v1-wide.
+
+**Implementation note:** `MaterialApp(routerConfig: ...)` was the
+planned call but doesn't compile on Flutter 3.44.5 — the
+`MaterialApp(...)` main constructor doesn't accept `routerConfig:` as
+a parameter (only initializes it to null). Used
+`MaterialApp.router(routerConfig: ...)` instead, which is the
+dedicated router constructor. `Navigator.push` from `CataloguePage`
+continues to work (go_router layers on top of `Navigator`, doesn't
+replace it — verified via Q3 of the Step 2.4 prerequisite quiz).
+
+**Out-of-scope items resolved during the phase:** data layer moved
+from `lib/features/catalogue/data/` to `lib/data/` (pre-emptive —
+keeps I-5/I-6 boundary clean before Phase 3a); widget test added
+for the catalogue page.
+
+**Drift from `05-DESIGN-SYSTEM.md` §9 "Hub page" pattern** *(carried
+over from Phase 1)*: `floatingActionButton` absent and `appBar:
+AppBar(title: Text('Your Catalogue'))` present on `CataloguePage` —
+both deviations from the locked spec, user-accepted, not blockers.
 
 ### Phase 3a — Drift data model ⏳ Pending
 

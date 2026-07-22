@@ -1,5 +1,5 @@
-import 'movie.dart';
-import 'movie_status.dart';
+import '../../../data/movie.dart';
+import '../../../data/movie_status.dart';
 
 const interstellar = Movie(
   id: '1',
