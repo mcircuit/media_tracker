@@ -26,9 +26,9 @@ their phase forces a revisit.
 ### 1.1 One-sentence positioning
 
 Track, organize, and remember every piece of media I've consumed or want
-to consume in one unified library — Movies, TV, Anime, Books, Games,
-Podcasts, Comics, Documentaries, Music videos — eventually with sharing
-and recommendations for people I trust.
+to consume in one unified library — Movies in v1; TV Shows, Anime,
+Video Games, Books, and Comics in v2 — eventually with sharing and
+recommendations for people I trust.
 
 ### 1.2 Primary user and core need
 
@@ -42,23 +42,52 @@ recommendations and send them back.
 
 ### 1.3 First-session flow (v1, no sign-up)
 
-1. Launch app → Catalogue hub opens immediately
-2. Tap the **+** FAB → SearchPage loads
-3. Type a movie title → TMDB returns results in a grid
-4. Tap a result → AddSheet opens (status toggle: Collection / To Consume,
-   rating input)
-5. Tap Save → AddSheet closes; the new movie appears on its HubCard
-6. **First core-value moment:** ~30 seconds after install
+The v1 user journey follows the wireframes in `images/` and `Idea.png`
+(D-L1). Surface terminology: HubCards are "Collection" and "Bucketlist";
+the Catalogue Page is the hub; the Search Page is a full-page route with
+5 states A–E (see §7 for details). Status enum is `MediaStatus.onBucketlist`
+(D-L13); UI label "Bucketlist".
 
-**v2 first-session flow:** Supabase sign-up (email/password → optionally
-Google/Apple) → local catalogue syncs → first social recommendation
-moment when sending "you might like X" to a friend.
+1. Launch app → **Landing Page** opens immediately. Movies tile is the
+   only tappable surface; below it, the text "Next Media Type: TV Shows
+   — coming soon!" is displayed (D-L7).
+2. Tap the Movies tile → **Home Page** opens, showing the Watchlist
+   horizontal carousel. The Collab and Upcoming carousels are deferred
+   to v2 (D-L8).
+3. The bottom nav has 2 tabs in v1: **Home** and **Catalogue**. The
+   Community and Explore tabs are reserved for v2 (D-L3).
+4. Tap the **Catalogue** tab → **Catalogue Page** opens, the hub with 2
+   large HubCards (Collection, Bucketlist). No FAB on this page (D-L9).
+5. Tap the **Collection** HubCard → **Collection Page** opens
+   (Statistics block + Search field + Media Filter button + 3-col grid
+   + FAB; D-L10).
+6. Tap the **Bucketlist** HubCard → **Bucketlist Page** opens (mirror
+   of Collection Page; data filtered to `MediaStatus.onBucketlist`; D-L11).
+7. Tap the **+** FAB on Home, Collection, or Bucketlist → **Search
+   Page** opens as a full-page route at `/search?q=<query>&type=movie`
+   (Q10). 'X' close button at top right; exit-confirm prompt at State C
+   and State E.
+8. Type a movie title → TMDB returns results in a 3-col grid below the
+   search bar (Search Page **State B**).
+9. Tap a result → the status toggle + rating screen for the selected
+   title appears inline in the Search Page (**State C**). Two bottom
+   buttons: **Done** (saves the single title and exits) or **Explore
+   Similar Titles** (continues to State D).
+10. If continuing, similar titles populate the screen (**State D**).
+    Long-press to multi-select; tap **Add** at the bottom.
+11. The selected titles appear in a confirmation screen with a
+    Collection / Bucketlist toggle at the top and per-item remove
+    (**State E**). Tap **Add to \<Destination\>** at the bottom to save
+    all selections to the toggle's destination and exit. The label
+    updates reactively as the user toggles (Q2 E2).
+12. Returning to the FAB's origin page → the new movie(s) appear on the
+    matching HubCard or list.
 
 ### 1.4 Three most important v1 features
 
 1. **Add a movie via TMDB search** — creates all the data the rest of
    the app shows.
-2. **Hub catalogue (Collection / To Consume cards)** — the place the
+2. **Hub catalogue (Collection / Bucketlist cards)** — the place the
    user returns to daily.
 3. **Edit / rate / move between statuses** — the action that rewards
    repeat visits.
@@ -69,29 +98,29 @@ If any of these break, v1 fails.
 
 ## 2. Scope
 
-### 2.1 In scope (v1)
+### 2.1 In scope for v1
 
-- Movies catalogue only
+- Movies media type only
 - Local-first persistence (Drift + SQLite, no backend)
 - TMDB read-only search for adding movies
 - Manual-entry fallback when TMDB is unreachable
-- Hub catalogue page (Collection / To Consume cards)
-- 2-state status enum (`onWatchlist`, `inCollection`)
+- Hub catalogue page (Collection / Bucketlist cards)
+- 2-state status enum (`onBucketlist`, `inCollection`)
 - Material 3 theming with custom seed color
-- Dark theme ships in v1. Light theme is derived from the same seed but not shipped in v1 (v1.1+ follow-up).
+- Both light and dark themes shipped in v1 (D-L2). Both palettes derive
+  from a single seed color via `ColorScheme.fromSeed(seedColor: …,
+  brightness: Brightness.light/dark)`. `themeMode: ThemeMode.system`
+  lets the OS toggle decide.
 - Offline-first behavior
 
-### 2.2 Out of scope (v1)
+### 2.2 Out of scope for v1
 
-- All non-Movies media types (TV, Anime, Books, Games, Podcasts, Comics,
-  Documentaries, K-Drama, Cartoons, Music videos)
+- All other media types (TV Shows, Anime, Video Games, Books, Comics)
 - Sharing via PDF / web link
 - Community circles, recommendations, swipe-matching
-- Auth, multi-user, backend, cloud sync
-- Bottom nav (single-page for v1)
-- Saved search sessions
+- Auth, multi-user, backend, cloud sync 
 - Similar-media discovery
-- iOS / web / desktop targets
+- iOS / web / desktop targets 
 - Custom user themes (Vivaldi-style)
 - Push notifications
 
@@ -107,14 +136,13 @@ If any of these break, v1 fails.
 - Swipe-based mutual watchlist matching ("Tinder for media")
 - Random genre / language / era explore
 - Same-genre recommendation algorithm
-- Explore page + Community page + bottom nav (3 or 4 tabs)
 - Custom UI theming (Vivaldi-style)
-- `onCollabLists` 6th status state
+- `onCollabLists` 6th media status state
 - **Import from external platforms** — let users bring in their existing
   tracking history. v2 sources to evaluate, in priority order:
     1. **Letterboxd CSV** (movies) — documented import format, no API
        needed, no OAuth.
-    2. **iMDB `ratings.csv`** uploaded by user, enriched via OMDb
+    2. **iMDB `ratings.csv`** uploaded by user, enriched via TMDB
        lookups per row.
     3. **Primitive plain-text lists** — heuristic parsing + manual
        review UI for low-confidence matches.
@@ -123,7 +151,7 @@ If any of these break, v1 fails.
 
   Each source requires:
     - A fetcher (CSV upload, OAuth API, scrape)
-    - A field mapper (iMDB 1–10 → our 0–5; Letterboxd 0.5-step →
+    - A field mapper (iMDB 1–10 ; Letterboxd 0.5-step →
       our 0.5-step)
     - A status vocabulary mapper (e.g., MAL "Watching" →
       `currentlyConsuming`; Steam "Abandoned" → `dropped`;
@@ -139,7 +167,7 @@ If any of these break, v1 fails.
   **Supabase Postgres** as a `media_universe` table — *not* bundled
   with the app, *not* a lazy on-device cache. Populated by an ETL
   pipeline maintained server-side, ingesting from each provider in
-  §4.3 (TMDB, RAWG, Open Library, AniList, Apple Podcasts, Comic
+  §4.3 (TMDB, RAWG, Open Library, AniList, Comic
   Vine). The app queries `media_universe` via PostgREST/Realtime and
   falls back to provider APIs on cache miss to refresh the universe.
 
@@ -166,11 +194,11 @@ If any of these break, v1 fails.
 | Local DB | `drift` + `sqlite3_flutter_libs` + `path_provider` | Drift is the typed, codegen'd SQLite layer for Flutter; `path_provider` gives the docs dir for the SQLite file |
 | Codegen | `drift_dev` + `build_runner` | Drift's data classes + queries are generated |
 | State | `flutter_riverpod` 3.x | Reactive, type-safe; `ProviderContainer.test` in Riverpod 3 makes provider tests cheap |
-| Navigation | `go_router` (Phase 2+) | Declarative, ready for v2 deep linking / web; Phase 1 uses `Navigator.push` |
+| Navigation | `go_router` | Declarative, ready for v2 deep linking / web; Phase 1 used `MaterialApp` (home: parameter); Phase 2 introduced go_router with 11 routes per §6.5; v1 ships go_router throughout |
 | HTTP | `dio` | Behind a `MediaSearchClient` interface so v2 can swap to a regenerated client without touching call sites |
 | Image cache | `flutter_cache_manager` (direct, **not** `cached_network_image`) | Disk-cached posters; `cached_network_image` last released 23 months ago and is rule #7 suspect — we use `flutter_cache_manager` directly with `Image.network` |
 | Fonts | `google_fonts` (verified publisher `flutter.dev`) | Source Serif 4 (display/headline) + Inter (title/body/label); official publisher satisfies rule #7 |
-| Icons | Material Symbols Rounded font, bundled as asset | No official Flutter wrapper for Material Symbols; bundling the Google-licensed font respects rule #7 |
+| Icons | Material Symbols Rounded font, bundled as asset | No official Flutter wrapper exists for Material Symbols as of plan-date; bundling the **Apache License 2.0** font at `assets/fonts/MaterialSymbolsRounded.ttf` respects rule #7 (D17) |
 | Misc | `intl`, `uuid` | Date formatting in v2; stable IDs across `media_items` and per-type detail tables |
 | Test target | Android emulator `emulator-5554`, API 36 | Phase 0 |
 | v2 backend | Supabase (Auth + Postgres + RLS + Realtime + Storage) | Postgres matches the roadmap PNG's "Postgres" reference; RLS is purpose-built for community permissions; cheaper than Firebase at scale; open-source so a future move to custom Python+Postgres is feasible |
@@ -199,6 +227,13 @@ dedicated commit. Tracking: [flutter/flutter#184093](https://github.com/flutter/
 For v1 we ship against 3.44.5 with the existing `package:flutter/material.dart`
 imports — no action required until the next Flutter major bump.
 
+**`MaterialApp(routerConfig: ...)` shortcut does not compile on
+Flutter 3.44.x.** The main `MaterialApp(...)` constructor does not
+accept `routerConfig:` as a parameter (only initializes it to null).
+The dedicated `MaterialApp.router(routerConfig: ...)` constructor is
+the only entry point that wires a `GoRouter` (lesson from Phase 2).
+§6.2 reflects this.
+
 ---
 
 ## 4. Data Model
@@ -213,7 +248,7 @@ title (TEXT, NOT NULL)               director (TEXT, nullable)
 year (INT, nullable)                 runtime_minutes (INT, nullable)
 type (TEXT)                          studio (TEXT, nullable)
 status (TEXT)                        tmdb_id (INT, nullable, unique)
-rating (REAL, nullable, 0–5)         poster_url (TEXT, nullable)
+rating (REAL, nullable, 0–10)         poster_url (TEXT, nullable)
 source (TEXT, NOT NULL, default      backdrop_url (TEXT, nullable)
         'manual')
 imported_at (DATETIME, nullable)
@@ -227,8 +262,8 @@ TEXT per §4.1 rule; vocabulary enforced at the app boundary.
 
 `imported_at` is nullable: `NULL` = manually added; non-NULL = imported
 at that time. Filtering and rollback logic use
-`WHERE imported_at IS NULL` / `IS NOT NULL`. See §11.3 for the v1 → v1.1
-migration that introduces these columns.
+`WHERE imported_at IS NULL` / `IS NOT NULL`. The columns ship in
+v1's initial schema; no migration is required.
 
 `type` is stored as plain `TEXT` — no CHECK constraint, no SQL ENUM.
 Widening the type set (`'movie'` → adding `'tv_show'`, `'anime'`, etc.)
@@ -259,11 +294,10 @@ both Google Books and OpenLibrary uses only the canonical provider below).
 | Type | Provider | Detail table | External id column | Auth model | Notes |
 |---|---|---|---|---|---|
 | Movie | TMDB | `movie_details` | `tmdb_id` (INT, nullable, unique) | API key in `lib/secrets.dart` | TMDB v3 `/movie/{id}` and `/search/movie` |
-| TV Show | TMDB | `tv_show_details` | `tmdb_id` (INT, nullable, unique) | Same TMDB API key | TMDB v3 `/tv/{id}` and `/search/tv`; movie and TV IDs are in separate id-spaces |
+| TV Shows | TMDB | `tv_show_details` | `tmdb_id` (INT, nullable, unique) | Same TMDB API key | TMDB v3 `/tv/{id}` and `/search/tv`; movie and TV IDs are in separate id-spaces |
 | Book | Open Library *(TBD v2)* | `book_details` | `olid` (TEXT, nullable, unique) | None — read endpoints are unauthenticated | Canonical id is OLID (`OL…W` for works, `OL…M` for editions) |
 | Game | **RAWG** | `game_details` | `rawg_id` (INT, nullable, unique) | API key in `lib/secrets.dart` | [rawg.io/apidocs](https://rawg.io/apidocs); **attribution hyperlink required** on every page using RAWG data or images |
 | Anime | AniList *(TBD v2)* | `anime_details` | `anilist_id` (INT, nullable, unique) | None — GraphQL is keyless | [docs.anilist.co](https://docs.anilist.co/); supports `idMal` cross-reference to MAL |
-| Podcast | Apple Podcasts via iTunes Search API *(TBD v2)* | `podcast_details` | `itunes_id` (INT, nullable, unique) | None — unauthenticated JSON | Returns RSS feed URL stored alongside |
 | Comic | Comic Vine *(TBD v2)* | `comic_details` | `comic_vine_id` (INT, nullable, unique) | API key (historical signup flakiness) | Fallback if key unobtainable: defer Comics to v3 |
 
 **Why RAWG over IGDB for Games (locked):** IGDB rate-limits at
@@ -312,19 +346,26 @@ corrupts the user's catalogue with items they never chose to track.
 
 ## 5. Status Enum
 
-Two states in v1, locked:
+Two states in v1, locked (D7, D20):
 
-| State | Meaning | Hub card |
+| Enum value | Meaning | Hub card label (wireframes) |
 |---|---|---|
-| `onWatchlist` | Want to consume | ✅ To Consume |
-| `inCollection` | Consumed | ✅ Collection |
+| `MediaStatus.onBucketlist` | Want to consume | **Bucketlist** |
+| `MediaStatus.inCollection` | Consumed | **Collection** |
 
-`onCollabLists` is deferred to v2.
+Canonical enum value & UI label: `onBucketlist` / **"Bucketlist"** (D-L13).
+Source of truth: the wireframes in `images/`. Earlier draft referred to
+the second state as "To Consume" — that label is retired.
+
+`MediaStatus.onCollabLists` is deferred to v2 (D20).
 
 ### 5.1 Hub mapping (strict, v1)
 
-- Collection card → filters `media_items` where `status = 'inCollection'`
-- To Consume card → filters `media_items` where `status = 'onWatchlist'`
+- **Collection** HubCard → filters `media_items` where `status = 'inCollection'`
+- **Bucketlist** HubCard → filters `media_items` where `status = 'onBucketlist'`
+
+The wireframes in `images/Bucketlist Page.png` and `images/Catalogue Page.png`
+are the source of truth for these labels (D-L1).
 
 ### 5.2 v2 status states (deferred)
 
@@ -342,52 +383,390 @@ storing values the UI can't surface creates invisible QA debt.
 
 ## 6. App Shell
 
-### 6.1 v1 — single page
+### 6.1 What the App Shell is
 
-The app is **single-page for v1**. There is no bottom nav, no drawer, no
-tabs. `MaterialApp.home = CataloguePage` is the entire app entry.
+The App Shell is the persistent scaffolding around every page: theme, status bar, top app bar, hamburger menu, bottom navigation, FAB, and the `go_router` route table. It does **not** own per-page content (cards, lists, search fields); it owns the chrome around them.
 
-This is intentional: bottom nav needs three or four destinations
-(Explore, Catalogue, Community, possibly Dashboard) and v1 has only
-Catalogue. Showing greyed-out / "coming soon" tabs in v1 adds maintenance
-without user value.
+The Shell is implemented once in `lib/app/` (`theme.dart`, `router.dart`) and reused by every page via a single `AppScaffold` widget in `lib/shared/`. Pages declare only their body's content; the chrome is supplied by `AppScaffold` reading the current route.
 
-### 6.2 v2 — bottom nav (deferred)
+### 6.2 `MaterialApp.router` configuration (root)
 
-PNG shows 3 tabs (Explore / Catalogue / Community). When v2 ships:
+```dart
+MaterialApp.router(
+  title: 'Media Tracker',
+  theme: buildAppTheme(brightness: Brightness.light),  // see §6.3
+  darkTheme: buildAppTheme(brightness: Brightness.dark),
+  themeMode: ThemeMode.system,                         // D-L2
+  routerConfig: buildAppRouter(),                      // see §6.5
+);
+```
 
-- Phase 7 introduces `go_router` routing and the shell scaffold.
-- Bottom nav lives at the bottom of the scaffold with three destinations.
-- Community is `greyed out "coming soon"` until Phase 7+ lands social
-  features.
+Notes:
+- `MaterialApp.router(...)` is the canonical constructor on Flutter 3.44.x;
+  the `MaterialApp(routerConfig: ...)` shortcut does **not** compile (Phase 2
+  lesson log).
+- `themeMode: ThemeMode.system` lets the OS toggle decide; v1 ships both
+  palettes so no extra code is needed when the user changes the OS theme.
+- `title` shows in the OS app-switcher surface.
+
+### 6.3 Theme (light + dark, single seed)
+
+- **Single seed color** locked in Phase 6 polish. Direction: deep blue /
+  indigo. Both palettes derive from this seed via
+  `ColorScheme.fromSeed(seedColor: …, brightness: Brightness.light/dark)`
+  (D10, D19, D-L2).
+- Palette mapping per `lib/app/theme.dart` color tokens — the
+  colors table stays; dark hex values fill the "brightness dark" row
+  and the equivalent light hex values fill the light row.
+- **Typography**: Source Serif 4 (display/headline) + Inter
+  (title/body/label) via `google_fonts` (D18). Verified publisher
+  `flutter.dev`.
+- **Icons**: Material Symbols Rounded, bundled as an asset at
+  `assets/fonts/MaterialSymbolsRounded.ttf`. License: **Apache License 2.0**
+  (correcting the prior "Google-licensed" wording). Used via
+  `IconData(fontFamily: 'MaterialSymbolsRounded', fontPackage: 'media_tracker')`.
+  Note: the official Flutter wrapper for Material Symbols is **not yet
+  released** as of plan-date; we consume the font directly (D17).
+- **Spacing**: 8px grid baseline (5 tokens per `05` §4: 4/8/16/24 dp; plus
+  2 dp sub-grid escape hatch).
+- **Radius**: 4 tokens (`05` §5: 8/12/20/9999 dp).
+- **Motion**: 3 tokens (`05` §6: 150/250/400 ms). Honor
+  `MediaQuery.disableAnimations` for OS "reduce motion": replace `motion/
+  default` and `motion/slow` with `Duration.zero`, keep `motion/fast`.
+
+### 6.4 Top app bar + hamburger menu
+
+Every page (except Landing and full-screen overlays) renders:
+
+```
++----------------------------------------------+
+|  [title]                              [≡]    |  ← AppBar: title + hamburger
++----------------------------------------------+
+|                                              |
+|  body                                        |
+|                                              |
++----------------------------------------------+
+|     Home        |       Catalogue            |  ← 2-tab bottom nav (v1)
++----------------------------------------------+
+```
+
+- `AppBar(title: Text(<page title>), actions: [hamburger IconButton])`.
+- Hamburger button opens the **Hamburger Menu overlay** (D-L12): 5 stacked
+  buttons — Profile, Media Type, Settings, Help, About. Each button's
+  behavior is "kept simple, defined at coding time" per user direction;
+  no admin/config screens in v1.
+- The AppBar title is provided by the page; the hamburger icon is fixed
+  by `AppScaffold`.
+
+### 6.5 `go_router` route table
+
+| Path | Page | Notes |
+|---|---|---|
+| `/` | `LandingPage` | Initial route; tile grid (§6 / D-L7). |
+| `/home` | `HomePage` | Bottom-nav tab 1; Watchlist carousel (D-L8). |
+| `/catalogue` | `CataloguePage` | Bottom-nav tab 2; hub (§6 / D-L9). |
+| `/catalogue/collection` | `CollectionPage` | Child route; full Search + Filter + grid (D-L10). |
+| `/catalogue/bucketlist` | `BucketlistPage` | Child route; mirror of Collection (D-L11). |
+| `/search` | `SearchPage` | Full-page route with 5 states A–E (see §6.9). 'X' pops; exit-confirm at C and E. |
+| `/profile` | `ProfilePage` | Hamburger target. Stub. |
+| `/media-type` | `MediaTypePage` | Hamburger target. v1 = Movies-only. |
+| `/settings` | `SettingsPage` | Hamburger target. Stub. |
+| `/help` | `HelpPage` | Hamburger target. Stub. |
+| `/about` | `AboutPage` | Hamburger target. Stub. |
+
+`buildAppRouter()` returns a `GoRouter` with `initialLocation: '/'`.
+Bottom-nav active-tab state reads `GoRouterState.of(context).uri`:
+
+| Active tab | Condition |
+|---|---|
+| Home | `path == '/home'` |
+| Catalogue | `path.startsWith('/catalogue')` |
+| (none) | `/search`, `/profile`, `/media-type`, `/settings`, `/help`, `/about` |
+
+`MaterialApp.router(routerConfig: ...)` is the only entry point on
+Flutter 3.44.x. `Navigator.push` remains compatible for legacy code
+(verified Phase 2).
+
+### 6.6 Bottom navigation (2 tabs in v1)
+
+```
++----------------------------------------------+
+|       Home        |       Catalogue          |  ← v1: 2 tabs only
++----------------------------------------------+
+```
+
+- 2 tabs in v1: **Home**, **Catalogue** (D-L3). Community and Explore do
+  **not** render in v1; they appear in v2 by widening `BottomNavigationBar.items`
+  to length 4 without changing `AppScaffold`'s signature.
+- Active tab uses `color/primary` (sapphire per `05` §2); inactive uses
+  `color/on-surface-variant`. Tab target ≥ 48dp (`05` §7 a11y).
+- v1 routes with no tab (Search, hamburger pages) suppress the
+  `BottomNavigationBar` entirely; `AppScaffold` reads the route and
+  decides.
+
+### 6.7 Floating Action Button
+
+The FAB renders on **Home, Collection, Bucketlist** pages only (per
+updated wireframes). It does **not** render on the Catalogue hub, Search
+Page, Hamburger Menu pages, or stubs.
+
+- Icon: `MaterialSymbolsRounded.add` (24dp default per `icon/md`).
+- `onPressed`: `context.push('/search')` (pushes onto the route stack).
+- Position: `floatingActionButtonLocation:
+  FloatingActionButtonLocation.endFloat`.
+
+### 6.8 Page chrome — `AppScaffold`
+
+A single widget in `lib/shared/app_scaffold.dart` wraps every page:
+
+```dart
+class AppScaffold extends StatelessWidget {
+  const AppScaffold({
+    super.key,
+    required this.title,
+    required this.body,
+    this.showFab = false,
+  });
+
+  final String title;
+  final Widget body;
+  final bool showFab;
+}
+```
+
+It produces: `Scaffold` + `AppBar(title, hamburger)` + body + (optional)
+`FloatingActionButton(add → context.push('/search'))` + 2-tab
+`BottomNavigationBar` (or none, per §6.6). The page declares only its
+body's content; the AppShell supplies everything else.
+
+Visual chrome the page **must not** duplicate: `AppBar`, `Drawer`,
+`BottomNavigationBar`, `FloatingActionButton`. Duplicates are code-review
+violations (I-7 enforcement via review).
+
+### 6.9 Modal / sheet conventions
+
+- **All 5 states of the Search Page render in v1.** State A (search
+  input) → State B (results grid) → State C (status + rating for the
+  selected title; user picks "Done" to end or "Explore Similar
+  Titles" to continue) → State D (similar-titles multi-select via
+  long-press) → State E (final confirm with Collection/Bucketlist
+  toggle and per-item remove; "Done" here ends the flow with all
+  selections saved).
+- **State C of the Search Page is rendered as a full-page state, not a
+  `ModalBottomSheet`.** Rationale: the State C → D transition needs a
+  continuous scroll and focus context (the page "expands" to show similar
+  titles in the same viewport). Splitting State C into a `ModalBottomSheet`
+  would force three route transitions (close sheet, push similar-titles,
+  push confirm) where one continuous state machine suffices. v2 may refactor
+  State C to a separate `ModalBottomSheet` for features that benefit from
+  a modal surface (system share intent, drag-to-dismiss gestures, partial-
+  state persistence across restarts); v1 ships it inline.
+- **EditSheet** is a `ModalBottomSheet` triggered from `MovieCard.onTap`
+  on Collection / Bucketlist pages. Same fields as State C's content
+  (status + rating), prefilled with the existing data. Has a `Delete`
+  action with a confirm dialog per D-L6.
+- **AddSheet as a separate `ModalBottomSheet` is v2-only.** v1 absorbs
+  it into State C of the Search Page route (above). Future refactor
+  documented here so reviewers don't push for the modal form during v1.
+- **Exit confirmation**: the Search Page 'X' prompts a confirm dialog
+  when leaving State C or State E with unsaved selections (no dialog
+  at A, B, D — those states are recoverable by re-tapping a result or
+  re-selecting).
+- **State machine of Search Page** lives in `lib/features/search/`
+  (see §7 Add-Movie Flow rewrite).
+
+### 6.10 Loading / error / empty states
+
+- **Loading**: `CircularProgressIndicator(color: color/primary)` centered
+  in the body's available space.
+- **Error**: `AlertDialog(color: color/surface, radius: radius/lg)` with
+  a retry action. Used for repository failures (e.g., Drift constraint
+  violation), HTTP failures outside the Search Page flow.
+- **Empty**: placeholder widget centered, `bodyMedium` text,
+  `color/on-surface-variant`. Examples:
+  - Empty Collection / Bucketlist: "No movies yet — tap + to add one."
+  - Empty Search Results: "No matches for '<query>'."
+  - Empty Manual Entry list (offline fallback): "TMDB is unavailable —
+    type a title above to add it manually."
+
+### 6.11 Asset pipeline summary
+
+| Asset | Path | Source |
+|---|---|---|
+| Theme | n/a | `lib/app/theme.dart` (`buildAppTheme`) |
+| Router | n/a | `lib/app/router.dart` (`buildAppRouter`) |
+| AppScaffold | n/a | `lib/shared/app_scaffold.dart` |
+| AppBar widget, hamburger IconButton | n/a | `lib/shared/widgets/` |
+| Source Serif 4 + Inter fonts | runtime fetch | `google_fonts` 6.x (D18) |
+| Material Symbols Rounded font | `assets/fonts/MaterialSymbolsRounded.ttf` | Apache 2.0 bundle (D17) |
+| TMDB poster cache | disk | `flutter_cache_manager` (D16) |
+| App icon, splash | standard Flutter | n/a |
+
+Pubspec asset declaration:
+
+```yaml
+flutter:
+  fonts:
+    - family: MaterialSymbolsRounded
+      fonts:
+        - asset: assets/fonts/MaterialSymbolsRounded.ttf
+```
+
+### 6.12 Build / dev / test environment
+
+- **Android-only build** (deferred iOS / Web / Desktop targets are v3).
+- **TMDB API key**: `lib/secrets.dart` (gitignored, dev) or
+  `--dart-define=TMDB_API_KEY=…` (CI). Fail-fast at the
+  `DioMediaSearchClient` constructor (I-14).
+- **Drift codegen**: `dart run build_runner build --delete-conflicting-outputs`.
+  Output `lib/data/database.g.dart` is gitignored; never hand-edit.
+- **Test mirror**: `test/data/`, `test/providers/`,
+  `test/features/<feat>/`, `test/integration/` (per I-10).
+- **Theme editor**: design-time changes to colors/typography live in
+  `lib/app/theme.dart` reads of `Theme.of(context).colorScheme`.
+
+### 6.13 Forward-compatibility notes
+
+- **v2 widens the type set** (D6, §4.3) — the Shell and routing layout
+  stay; only `MediaType` enum widens and a per-type filter routes in.
+- **v2 widens the bottom nav** to 4 tabs (Home, Catalogue, Community,
+  Explore) by setting `BottomNavigationBar.items` to length 4 and adding
+  the v2 routes. `AppScaffold` signature unchanged.
+- **v3 widens to iOS / Web / Desktop** — the Shell is platform-aware via
+  Flutter's adaptive widgets; `go_router` URL strategy configures per
+  platform.
+- **Supabase backend** (D12, D26) — auth gate and per-user routes added
+  at `GoRouter.redirect`; the Shell's UI does not change.
 
 ---
 
 ## 7. Add-Movie Flow
 
-The single most important interaction in v1. Flow:
+The single most important interaction in v1. The flow is a 5-state
+state machine inside the **Search Page route** (`/search?q=<query>&type=movie`
+per Q10). The AddSheet UI is **State C**, rendered inline (not a separate
+`ModalBottomSheet`); similar-titles multi-select is **State D**; the
+final confirmation with toggle + remove is **State E**. The flow ends
+when the user presses **"Add to \<Destination\>"** at State E (multi-title)
+or **"Done"** at State C (single title). The "X" close button at the
+top right exits the flow at any state; an exit-confirm dialog fires at
+States C and E when there are unsaved selections (Q2 E2, Q4, Q7, Q8, Q10).
+See §6.9 for the rationale on inline-in-route vs. modal-sheet
+treatment of AddSheet.
+
+### 7.0 Flow diagram
 
 ```
-Catalogue hub (Collection + To Consume cards)
-         │ tap [+]
-         ▼
-SearchPage — TMDB search input, media-type filter (Movies only in v1)
-         │ user types title, e.g. "The Matrix"
-         ▼
-SearchResultsPage — grid (3×3 / 4×4 / 6×6 / list toggle), multi-select
-         │ user taps one (or many)
-         ▼
-AddSheet — status toggle (Collection ⇄ To Consume), rating (0–5)
-         │ tap Save
-         ▼
-back to hub; HubCard updates with new entry
+Home / Collection / Bucketlist
+  │ tap [+] FAB
+  ▼
+State A — SearchPage         ◀── URL: /search?q=<query>&type=movie
+  │ user types title, e.g. "The Matrix"
+  ▼
+State B — SearchResultsView  ◀── 3-col grid; results from TMDB;
+  │ user taps one result           manual-entry fallback if
+  ▼                                MediaSearchClient returns
+State C — AddSheetView           MediaSearchUnavailable (Q4)
+  │ status toggle + rating
+  ├─ tap "Done" ───────────────▶  save single title, exit flow
+  └─ tap "Explore Similar Titles"
+                                 ▼
+State D — SimilarTitlesView    ◀── 3-col grid; long-press to
+  │ multi-select via long-press     multi-select
+  │ "Add" button at bottom
+  ▼
+State E — ConfirmSelectionView ◀── Collection / Bucketlist toggle at top
+  │                                per-item remove
+  ├─ tap "Add to <Destination>"──▶  save all selections, exit flow;
+  │                                label updates reactively (Q2 E2)
+  └─ tap "X" with unsaved         ▼
+      selection ── confirm       user returns to FAB origin page;
+                                 HubCards update
 ```
 
-### 7.1 Idempotency on add
+### 7.1 State A — Search input
 
-The search-results grid supports multi-select (see flow above). A user can
-tap the same result twice across sessions, and TMDB can return the same
-movie under similar queries. Before any `INSERT` into `media_items`, the
+- SearchPage opens via `context.push('/search')` from the FAB on Home,
+  Collection, or Bucketlist (D-L4, Q1).
+- Top-right 'X' close button (`MaterialSymbolsRounded.close`); tap
+  exits without prompt (no unsaved state at A).
+- Initial URL: `/search` (no query params). When the user types, the
+  URL becomes `/search?q=<encoded query>`; `type=movie` is default in
+  v1 and is implicit (Q10, v2 reuse path).
+- Internal state held by `SearchPage`: `query`, `searchResults`,
+  `selectedMediaItem`, `similarTitles`, `pendingSelections`, `pendingDestination`.
+
+### 7.2 State B — Results grid + manual-entry fallback
+
+- As the user types (or after hitting Search), `MediaSearchClient.search(
+  {query: query, mediaType: MediaType.movie})` runs.
+- On success: a 3-col grid populates below the search bar.
+- On `MediaSearchUnavailable`: State B is replaced with a manual-entry
+  form (Q4). See §7.8.
+- Tapping a result transitions the Search Page to State C with the
+  selected media item loaded into `selectedMediaItem`.
+
+### 7.3 State C — AddSheet (status + rating for the selected title)
+
+- Rendered inline within the Search Page route — **not** a separate
+  `ModalBottomSheet`. Rationale: the State C → State D transition needs
+  a continuous scroll/focus context (the page "expands" to show
+  similar titles in the same viewport). Splitting would force three
+  route transitions where one state machine suffices (D-L4 §6.9).
+- Fields:
+  - **Status toggle**: Collection / Bucketlist. **Default: Collection**
+    (Q7 — search-flow default; manual-entry default is Bucketlist, §7.8).
+  - **Rating**: 0–10 (slider or star display).
+- Bottom row: two buttons.
+  - **"Done"** — saves the single title to `media_items` +
+    `movie_details` and exits the Search Page.
+  - **"Explore Similar Titles"** — transitions to State D, populating
+    `similarTitles` from TMDB's `/movie/{id}/similar` endpoint.
+- 'X' close button at top right; exit-confirm dialog fires if the user
+  hasn't saved.
+- Idempotency: §7.7.
+
+### 7.4 State D — Similar titles (multi-select)
+
+- 3-col grid of TMDB-similar titles, populated automatically when the
+  user enters State D.
+- Long-press to multi-select; checkmark overlay indicates selection.
+  Tap toggles the selection state.
+- Bottom **"Add"** button — transitions to State E with the multi-
+  selected list. If the user doesn't long-press any title, the Add
+  button still proceeds with zero additional titles (only the original
+  AddSheet addition, from State C).
+
+### 7.5 State E — Confirm selection
+
+- View toggle at top-right (3-col grid / list view); default 3-col grid.
+- **Top toggle**: Collection / Bucketlist (single-select). Determines
+  the destination for every selected title.
+- Per-item **remove** icon on each card/row. User can prune the list
+  before commit.
+- Bottom **"Add to \<Destination\>"** button — label updates reactively
+  as the user toggles between Collection and Bucketlist (Q2 E2). On tap:
+  every selected title is inserted into `media_items` + `movie_details`
+  with the chosen destination; SearchPage exits via `Navigator.pop`;
+  user returns to the FAB's origin page.
+- 'X' close button at top right; exit-confirm dialog fires if any
+  selection is unsaved (i.e., the toggle differs from the original or
+  any remove has happened).
+
+### 7.6 'X' exit + confirm
+
+- At States A, B, D: tapping 'X' exits without prompt (nothing
+  unsaved; D is recoverable by re-pressing "Add" from State C).
+- At States C and E: tapping 'X' pops a confirm dialog: **"Discard
+  your changes? You will lose unsaved selections."** Buttons:
+  - **Discard** — exits without saving; pops `/search` route.
+  - **Stay** — dismisses the dialog; user remains at the state.
+
+### 7.7 Idempotency on add
+
+The multi-select + similar-titles flow (§7.4) means a user can tap the
+same result twice across sessions, and TMDB can return the same movie
+under similar queries. Before any `INSERT` into `media_items`, the
 repository runs:
 
 ```dart
@@ -398,38 +777,47 @@ if (existing != null) {
 ```
 
 `SearchRepository` translates `AlreadyInCollection` into a user-facing
-snackbar in `AddSheet`:
+snackbar surfaced on the FAB's origin page:
 
 - `existing.status == inCollection` → **"Already in your Collection"**
-- `existing.status == onWatchlist`  → **"Already on your To Consume list"**
+- `existing.status == onBucketlist` → **"Already on your Bucketlist"**
 
 The exception type lives at `lib/data/repositories/errors.dart`. The
 unique index on `movie_details.tmdb_id` (see §4.1) is the last-line
 defense; the pre-check is what surfaces the friendly message.
 
-### 7.2 Offline fallback
+### 7.8 Manual entry (offline fallback)
 
-If TMDB is unreachable, `MediaSearchClient` returns a typed error.
-`SearchPage` catches it and switches to a **manual-entry form**:
+Replaces State B when `MediaSearchClient` returns `MediaSearchUnavailable`.
+Fields (Q7 locked):
 
-```text
-Title: ___________  (text)
-Year:  _____       (number)
-Genre: ___ ___ ___ (chips, multi)
-Rating: ☆☆☆☆☆     (0–5)
-Status: [● Collection] [  To Consume ]
-[ Cancel ]           [ Save ]
-```
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| Title | text | yes | non-empty validation |
+| Year | number | no | integers, 1900–current |
+| Genre | chip multi-select | no | v1 vocabulary aligned to TMDB genres |
+| Rating | 0–10 | no | slider or star display |
+| Status | toggle | yes | **default: Bucketlist** (Q7) |
 
-Same `Save` path; just no `movie_details` populated beyond what's typed.
+Save validates Title non-empty; inserts into `media_items` (no
+`movie_details` row when `tmdb_id` is null). The Save exits the Search
+Page directly, skipping State D and State E (no similar-titles without
+TMDB).
 
-### 7.3 Saved search sessions — REMOVED
+### 7.9 File structure under `lib/features/search/` (Q8)
 
-Originally proposed in the planning session: a way to save a TMDB search
-session and resume later. **Removed entirely.** No `search_sessions`
-table, no save button, no resumption UI.
+| File | Public class | State |
+|---|---|---|
+| `search_page.dart` | `SearchPage` | n/a (route entry + state machine) |
+| `search_input_view.dart` | `SearchInputView` | A |
+| `search_results_view.dart` | `SearchResultsView` | B |
+| `add_sheet_view.dart` | `AddSheetView` | C |
+| `similar_titles_view.dart` | `SimilarTitlesView` | D |
+| `confirm_selection_view.dart` | `ConfirmSelectionView` | E |
 
----
+Each state is a top-level widget in its own file. `SearchPage` owns the
+state machine (`_state` enum or `StatefulWidget` private fields) and
+swaps which file's widget renders based on `_state`.
 
 ## 8. Theme & Design
 
@@ -447,16 +835,18 @@ table, no save button, no resumption UI.
     - Movie titles in `MovieCard` use display/headline weight
 - **Spacing:** 8px grid baseline. Cards 12px inner padding; 16px gaps.
 - **Shape:** 12dp card radius; full radius on buttons.
-- **Light + dark:** Dark theme ships in v1. Light is derived from the
-  same seed via `ColorScheme.fromSeed(seedColor: …, brightness:
-  Brightness.light)` but not shipped in v1. v1.1+ adds the OS-handler
-  to switch to light. Both palettes are derived from the single seed
-  at runtime; no design work is needed when v1.1 ships.
+- **Light + dark:** **Both palettes shipped in v1** (D-L2). Both
+  derive from the single seed via
+  `ColorScheme.fromSeed(seedColor: …, brightness: Brightness.light/dark)`.
+  `themeMode: ThemeMode.system` (per §6.2) lets the OS decide. The
+  AppShell reads `MediaQuery.platformBrightnessOf(context)` to swap
+  themes at runtime; no design work is needed.
 - **Icons:** **Material Symbols Rounded font, bundled as an asset**.
-  Use `IconData(fontFamily: 'MaterialSymbolsRounded', fontPackage: …)`.
-  Tonal variants for status. No official Flutter package wraps Material
-  Symbols (Flutter's built-in `Icons` class is the legacy Material Icons
-  set, not Symbols); bundling the Google-licensed font is the
+  Use `IconData(fontFamily: 'MaterialSymbolsRounded', fontPackage: 'media_tracker')`.
+  Tonal variants for status. License: **Apache License 2.0** (correcting
+  prior "Google-licensed" wording; see §3.0 + D17). No official Flutter
+  package wraps Material Symbols (Flutter's built-in `Icons` class is
+  the legacy Material Icons set, not Symbols); bundling the font is the
   rule #7-compliant path.
 
 ### 8.2 Component library
@@ -464,72 +854,26 @@ table, no save button, no resumption UI.
 Built-in Flutter **Material 3** widgets. No third-party UI library.
 
 Widgets in active use:
-- `MaterialApp` + `Scaffold`
+- `MaterialApp.router` + `Scaffold` (see §6.2; `MaterialApp(routerConfig: …)`
+  shortcut does not compile on Flutter 3.44.x)
 - `Card` for `MovieCard` and `HubCard`
-- `ListView.builder` for Collection / To Consume lists
-- `GridView.builder` for search results
-- `ModalBottomSheet` for `AddSheet`
+- `ListView.builder` for Collection / Bucketlist lists
+- `GridView.builder` for search results (State B / State D of the
+  Search Page, see §7)
+- `ModalBottomSheet` for `EditSheet` (D-L6, see §7.3) and the Media
+  Filter sheet (Q4) — **not** for AddSheet, which is State C inline
+  per §6.9 + §7.3
 - `FilledButton`, `IconButton`, `TextField`, `Chip`
 - `Image.network(url, cacheManager: DefaultCacheManager())` for posters
   (Phase 5+). `flutter_cache_manager` provides the disk cache layer
   directly — `cached_network_image` is **not** used (rule #7; last
   release 23 months ago).
 
-### 8.3 High-level layout
-
-```text
-┌─────────────────────────────────┐
-│  Catalogue  (single page)       │
-│                                 │
-│  ┌───────────────────────────┐  │
-│  │  ◉ Collection (3)         │  │   ← HubCard 1
-│  │    tap to view list       │  │
-│  └───────────────────────────┘  │
-│                                 │
-│  ┌───────────────────────────┐  │
-│  │  ◉ To Consume (2)         │  │   ← HubCard 2
-│  │    tap to view list       │  │
-│  └───────────────────────────┘  │
-│                                 │
-│                       [+]        │   ← FAB → SearchPage
-└─────────────────────────────────┘
-              ↓ tap [+]
-┌─────────────────────────────────┐
-│  Search                         │
-│  ┌─────────────────────┐ [▾]    │
-│  │ "The Matrix"        │        │
-│  └─────────────────────┘        │
-│  ┌──┐┌──┐┌──┐                  │
-│  │  ││  ││  │  ← 3×3 grid     │
-│  └──┘└──┘└──┘                  │
-│  ┌──┐┌──┐┌──┐                  │
-│  │  ││  ││  │                  │
-│  └──┘└──┘└──┘                  │
-│  View: [3×3] [4×4] [6×6] [list] │
-└─────────────────────────────────┘
-              ↓ tap a result
-┌─────────────────────────────────┐
-│  Add "The Matrix"               │
-│  ┌─────────────────────────┐    │
-│  │  poster | 1999 | Sci-Fi │    │
-│  └─────────────────────────┘    │
-│  Add to:  [● Collection]        │
-│           [  To Consume ]       │
-│  Rating: ☆☆☆☆☆                │
-│  [ Cancel ]      [ Save ]       │
-└─────────────────────────────────┘
-```
-
-v2 layout (deferred): bottom nav (Explore / Catalogue / Community), plus
-a drawer (Profile / Home / Dashboard / Settings). v1 is single-page by
-design — see `agent_docs_tutor/04-PHASE-GUIDE.md` and the v2 phase slots
-in §18 below.
-
 ---
 
 ## 9. System Boundaries (folder layout)
 
-Current state — Phase 1 in progress:
+Current state — v1:
 
 ```
 lib/
@@ -538,7 +882,7 @@ lib/
     └── catalogue/
         ├── data/         # value objects + sample data
         ├── widgets/      # MovieCard, HubCard
-        └── *_page.dart   # CataloguePage, MyCollectionPage, ToConsumePage
+        └── *_page.dart   # CataloguePage, MyCollectionPage, BucketlistPage
 ```
 
 Target state — what each layer owns once Phase 3+ lands:
@@ -569,16 +913,22 @@ lib/
 │       └── search_repository.dart     # depends on MediaSearchClient
 ├── features/                          # UI by feature
 │   ├── catalogue/
-│   ├── add_movie/                     # Phase 5
-│   │   ├── search_page.dart
-│   │   ├── search_results_page.dart
-│   │   └── add_sheet.dart
-│   └── (future: explore/, community/)
+│   ├── search/                        # Phase 5; 5-state Search Page
+│   │   ├── search_page.dart           # route entry + state machine
+│   │   ├── search_input_view.dart     # State A
+│   │   ├── search_results_view.dart   # State B
+│   │   ├── add_sheet_view.dart        # State C (inline)
+│   │   ├── similar_titles_view.dart   # State D
+│   │   └── confirm_selection_view.dart # State E
+│   └── (future: explore/, community/, hamburger_stubs/)
+├── shared/
+│   ├── app_scaffold.dart              # AppShell (per §6.8)
+│   └── widgets/                       # AppBar, hamburger IconButton, etc.
 ├── providers/                         # Riverpod providers, top-level
 │   ├── database_provider.dart
 │   ├── movies_list_provider.dart
-│   └── search_provider.dart
-└── shared/                            # Reusable widgets, helpers
+│   ├── search_provider.dart
+│   └── filter_provider.dart           # Genre-only filter (Q4)
 
 test/
 ├── data/        # drift repository tests (Phase 3)
@@ -599,7 +949,7 @@ Boundary rules:
 
 1. **No silent data loss.** Drift migrations must preserve existing user
    data. Each migration step has a test.
-2. **Status enum is the locked 2 states.** v1 ships `onWatchlist` and
+2. **Status enum is the locked 2 states.** v1 ships `onBucketlist` and
    `inCollection` only. `onCollabLists` does not appear anywhere in v1
    code. The other three states (`currentlyConsuming`, `dropped`,
    `upcoming`) are added in v2 — see §5.2.
@@ -609,56 +959,25 @@ Boundary rules:
    `lib/features/catalogue/data/movie.dart` (and successors). Drift
    `EnumNameConverter` (see §4.4) is wired at the column level — no
    free-form strings reach SQLite.
-4. **No comments unless asked.** Per original working doc section H.
-5. **One commit per phase** (or sub-phase when a phase contains two
+4. **One commit per phase** (or sub-phase when a phase contains two
    independent concerns — see §13 Phase 3 split). Per original working
    doc section H.
-6. **Pinned dependency versions.** No `^` or `>=` in `pubspec.yaml` —
+5. **Pinned dependency versions.** No `^` or `>=` in `pubspec.yaml` —
    only exact pins.
-7. **Official packages only.** No unverified third-party packages.
+6. **Official packages only.** No unverified third-party packages.
    Concrete exceptions and reasons are tracked in the Decisions log
    (D16, D17, D18). Where a third-party package is the only viable
    option, document the security/maintenance trade-off in a Decisions
    row before adopting it.
-8. **`MediaSearchClient` is the only call site for TMDB.** No `dio`
+7. **`MediaSearchClient` is the only call site for TMDB.** No `dio`
    imports inside `features/`. The v2 swap to a regenerated client
    (e.g., `openapi_generator`) touches the impl, not the call sites.
-9. **Widgets never import Drift directly.** UI reads from Riverpod
+8. **Widgets never import Drift directly.** UI reads from Riverpod
    providers; providers read from repositories; repositories read from
    DAOs.
-10. **No `setState` for shared state.** Local UI state is fine; anything
+9. **No `setState` for shared state.** Local UI state is fine; anything
     cross-widget goes through Riverpod.
-11. **Tests live next to the code they cover** — repository tests in
-    `test/data/`, provider tests in `test/providers/`, widget tests in
-    `test/features/<feature>/`.
-12. **Material import strategy (Flutter 3.44 watch).** All Material
-    imports go through `package:flutter/material.dart` while we are on
-    Flutter 3.44.x. When the project upgrades past 3.44.x, migrate to
-    `material_ui` / `cupertino_ui` first-party packages in a single
-    dedicated commit. Tracking: [flutter/flutter#184093](https://github.com/flutter/flutter/issues/184093).
 
-### 10.1 Cross-references to the 14 invariants
-
-The 12 rules above cover the v1-critical subset. Three invariants
-maintained in the tutor doc set are referenced from here rather than
-restated, to avoid drift between the two doc sets:
-
-- **I-11** — `MediaSearchClient.search` signature is locked at
-  `Future<List<MediaSearchResult>> search({required String query, required MediaType mediaType})`.
-  See `agent_docs_tutor/02-ARCHITECTURE.md` §I-11. Enforced in chat
-  during code review.
-- **I-13** — No `user_id` column on `media_items` in v1. Auth and
-  multi-tenant logic are deferred to v2 (Supabase + RLS, see D12).
-  See `agent_docs_tutor/02-ARCHITECTURE.md` §I-13.
-- **I-14** — `TMDB_API_KEY` must be set at boot (via
-  `lib/secrets.dart` for dev or `--dart-define=…` for CI). Missing key
-  fails fast at the `MediaSearchClient` constructor. See
-  `agent_docs_tutor/02-ARCHITECTURE.md` §I-14.
-
-The canonical list of all 14 invariants is in
-`agent_docs_tutor/02-ARCHITECTURE.md` §"The 14 invariants" (I-1
-through I-14). This section is the v1 subset restated for
-readability; the tutor doc is authoritative.
 
 ---
 
@@ -666,23 +985,65 @@ readability; the tutor doc is authoritative.
 
 Additive migrations per phase via `MigrationStrategy.onUpgrade(from, to)`.
 
-Drift's new `stepByStep` codegen helper is available — it produces
-per-step migration files based on schema diffs. Use it where it
-shortens the work; fall back to manual `onUpgrade` where it doesn't.
+Drift's `stepByStep` codegen helper is the preferred path for
+writing migrations: it produces per-step migration files (`database.steps.dart`)
+based on schema diffs, so each `fromNToN+1: (m, schema) async { ... }`
+callback sees the correct schema snapshot and can't accidentally
+reference an un-added column. Generated by `dart run drift_dev make-migrations`.
+Use it for every migration unless the schema diff is trivial. (Manual
+`if (from < N)` blocks remain a fallback for one-line hot-fixes.)
 
-### 11.1 Adding a new media type
+### 11.1 Adding a new media type (stepByStep worked example)
 
 When v2 adds TV Shows, Anime, etc.:
 
-1. Create `lib/data/tables/tv_show_details.dart` (etc.) joined by
-   `media_item_id` to `media_items`.
-2. Bump `schemaVersion` (e.g. 1 → 2 for TV, 2 → 3 for Anime).
-3. Add a new `if (from < 2) { await m.createTable(tvShowDetails); }` step
-   in `onUpgrade`.
-4. Write a test that:
-    - Opens v1 schema, inserts a Movie, closes
-    - Opens v2 schema against the same DB file
-    - Asserts the Movie is still present and the new table exists
+1. Create the new detail table, e.g. `lib/data/tables/tv_show_details.dart`,
+   joined by `media_item_id` to `media_items`.
+2. Register it in `AppDatabase`'s `@DriftDatabase(tables: [...])` list.
+3. Bump `schemaVersion` (e.g. 1 → 2 for TV Shows, 2 → 3 for Anime).
+4. Run `dart run drift_dev make-migrations`. The generator writes
+   `database.steps.dart` with the per-step closures; reference that file
+   from your migration:
+   ```dart
+   import 'package:drift/drift.dart';
+   import 'database.steps.dart';
+
+   part 'database.g.dart';
+
+   @DriftDatabase(tables: [MediaItems, MovieDetails, TvShowDetails])
+   class AppDatabase extends _$AppDatabase {
+     AppDatabase(super.e);
+
+     @override
+     int get schemaVersion => 2; // bumped for TV Shows
+
+     @override
+     MigrationStrategy get migration {
+       return MigrationStrategy(
+         onCreate: (m) async => m.createAll(),
+         onUpgrade: _schemaUpgrade,
+       );
+     }
+   }
+
+   // Extracting stepByStep into an extension ensures the migration
+   // code does not accidentally refer to the current database schema.
+   // Each step brings the database into the correct snapshot.
+   extension Migrations on GeneratedDatabase {
+     OnUpgrade get _schemaUpgrade => stepByStep(
+       from1To2: (m, schema) async {
+         await m.createTable(schema.tvShowDetails);
+       },
+     );
+   }
+   ```
+5. Write a `SchemaVerifier`-based test that opens the v1 schema, inserts
+   a Movie, then opens the v2 schema and asserts the Movie is still
+   present and the new table exists.
+
+`media_items.type` and `.status` are plain TEXT, so widening the type
+set is **zero schema change** in SQLite — only the new detail table
+requires migration steps.
 
 `media_items.type` and `.status` are plain TEXT, so widening the type
 set is **zero schema change** in SQLite.
@@ -703,32 +1064,6 @@ test('migration v1 → v2 preserves existing Movies', () async {
 ```
 
 (Drift tests run on the host — no emulator needed.)
-
-### 11.3 v1 → v1.1 schema additions (forward-compatible with v2 import)
-
-When v1 source column and imported_at are added (§4.1):
-
-1. Bump `schemaVersion` (e.g., 1 → 2).
-2. Add to `onUpgrade`:
-
-   ```dart
-   if (from < 2) {
-     await m.addColumn(mediaItems, mediaItems.source);
-     await m.addColumn(mediaItems, mediaItems.importedAt);
-     await database.customStatement(
-       "UPDATE media_items SET source = 'manual' WHERE source IS NULL",
-     );
-   }
-   ```
-
-3. Write a migration test (drift in-memory, see §11.2 pattern):
-   - Open as v1, insert a Movie, close.
-   - Open as v2 against the same DB file.
-   - Assert: the existing Movie has `source = 'manual'` and
-     `imported_at IS NULL`.
-
-The default `'manual'` backfill ensures existing v1 user data is
-correctly attributed as manual after the migration.
 
 ---
 
@@ -752,17 +1087,17 @@ package. Integration tests use the `integration_test` package.
 
 ## 13. Build Order
 
-| # | Phase | Produces | Status |
-|---|---|---|---|
-| 0 | Tooling | `flutter doctor` clean; emulator `emulator-5554` online; default counter app launched | ✅ Done |
-| 1 | Widget fundamentals + static catalogue hub | Hardcoded `Movie`s, `MovieCard`, `HubCard`, hub page (Collection → My Collection / To Consume) | 🚧 In progress |
-| 2 | App shell | App stays single-page (1 tab) for v1; `go_router` setup for future routing needs; MediaSearchClient interface defined | ⏳ Pending |
-| 3a | Drift data model | `AppDatabase` with `schemaVersion = 1`; `media_items` + `movie_details`; **2-state enum** (`onWatchlist`, `inCollection`) as TEXT; `EnumNameConverter<MediaType>` and `EnumNameConverter<MediaStatus>` wired at column level (see §4.4); DAOs; **Drift repository tests added here** | ⏳ Pending |
-| 3b | TMDB search interface | `MediaSearchClient` abstract interface (locked signature); `DioMediaSearchClient` impl with API-key interceptor; TMDB DTOs; `SearchRepository`; **idempotency on add** with `AlreadyInCollection` exception (see §7.1); offline fallback (manual-entry form); API key in `lib/secrets.dart` | ⏳ Pending |
-| 4 | Riverpod over drift | `databaseProvider`, `moviesListProvider`, `searchProvider`; CRUD via providers; **provider tests added here** | ⏳ Pending |
-| 5 | Full CRUD UI (Movies only) | Add / Edit / Delete on Movies; TMDB search page; results grid; AddSheet; widget tests. **No TV Shows mirror in v1.** | ⏳ Pending |
-| 6 | Polish | Material 3 theme + custom seed + typography ramp; empty states; offline UX; accessibility; error states; optional integration test | ⏳ Pending |
-| 7 | Wrap-up | `ROADMAP.md` documents v2 features; Supabase plan; multi-user migration plan; one retrospective on locked decisions vs. hunches | ⏳ Pending |
+| # | Phase | Produces |
+|---|---|---|
+| 0 | Tooling | `flutter doctor` clean; emulator `emulator-5554` online; default counter app launched |
+| 1 | Widget fundamentals + static catalogue hub | Hardcoded `Movie`s, `MovieCard`, `HubCard`, hub page (Collection → Collection / Bucketlist) |
+| 2 | App shell | `go_router` config with 11 routes; 2-tab bottom nav in v1; MediaSearchClient interface defined; `MaterialApp.router` wiring. **App is multi-page from v1** (D-L3, D-L4). |
+| 3a | Drift data model | `AppDatabase` with `schemaVersion = 1`; `media_items` + `movie_details`; **2-state enum** (`onBucketlist`, `inCollection`) as TEXT; `EnumNameConverter<MediaType>` and `EnumNameConverter<MediaStatus>` wired at column level (see §4.4); DAOs; **Drift repository tests added here** |
+| 3b | TMDB search interface | `MediaSearchClient` abstract interface (locked signature); `DioMediaSearchClient` impl with API-key interceptor; TMDB DTOs; `SearchRepository`; **idempotency on add** with `AlreadyInCollection` exception (see §7.7); offline fallback (manual-entry form per §7.8, status defaults to Bucketlist); API key in `lib/secrets.dart` |
+| 4 | Riverpod over drift | `databaseProvider`, `moviesListProvider`, `searchProvider`, `filterProvider` (Genre-only, per Q4); CRUD via providers; **provider tests added here** |
+| 5 | Full CRUD UI (Movies only) | Add / Edit / Delete on Movies; Search Page 5-state flow (§7.0–§7.6); AddSheet as State C inline; EditSheet as `ModalBottomSheet` from Collection/Bucketlist pages; ManualEntryForm (offline); 6 files under `lib/features/search/`; widget tests. **No TV Shows mirror in v1.** |
+| 6 | Polish | Verify light + dark palettes render correctly; verify typography ramp is consistent across pages; empty states; offline UX; accessibility (semantics labels, focus order); error states; optional integration test |
+| 7 | Wrap-up | Supabase plan; multi-user migration plan; one retrospective on locked decisions vs. hunches |
 
 One commit per phase (or per sub-phase when a phase contains two
 independent concerns — see Phase 3a / 3b), per the convention in the
@@ -790,14 +1125,16 @@ working doc.
 ### U2 — Static catalogue hub (🚧 in progress)
 
 - `lib/features/catalogue/data/movie.dart` — value object
-- `lib/features/catalogue/data/sample_movies.dart` — 5 `const Movie(...)` entries + `collectedMovies` / `toConsumeMovies` getters
+- `lib/features/catalogue/data/sample_movies.dart` — 5 `const Movie(...)` entries + `collectedMovies` / `bucketListMovies` getters
 - `lib/features/catalogue/widgets/movie_card.dart`
 - `lib/features/catalogue/widgets/hub_card.dart`
 - `lib/features/catalogue/my_collection_page.dart`
-- `lib/features/catalogue/to_consume_page.dart`
+- `lib/features/catalogue/bucketlist_page.dart`
 - `lib/features/catalogue/catalogue_page.dart` + `main.dart` rewrite
 
-**Verify:** launch → Catalogue hub shows → tap Collection card → 3 movies visible → back → tap To Consume card → 2 movies visible.
+**Verify:** launch → Catalogue hub shows → tap Collection card → 3 movies visible → back → tap Bucketlist card → 2 movies visible.
+
+> **Phase 1 amendment note:** the shipped Phase 1 code uses `MediaStatus.onWatchlist` / `'Bucket List'` / `to_consume_page.dart`. The canonical naming locked by D-L13 is `onBucketlist` / `'Bucketlist'` / `bucketlist_page.dart`; the rename cascade is captured in D33 (§16.5). U2's verify line was edited post-shipping; the file names in the Done Definition match the renames.
 
 ### U3 — Drift schema (Phase 3a)
 
@@ -806,7 +1143,7 @@ working doc.
 - `lib/data/tables/movie_details.dart` — joined by `media_item_id`; unique partial index on `tmdb_id`
 - `MigrationStrategy.onCreate` builds both tables + indexes
 - `MigrationStrategy.onUpgrade` includes additive migration steps (placeholder for v2 — no steps needed in v1)
-- `lib/data/daos/movie_dao.dart` — typed queries, including `findByTmdbId(int)` for idempotency (§7.1)
+- `lib/data/daos/movie_dao.dart` — typed queries, including `findByTmdbId(int)` for idempotency (§7.7)
 - 4-5 repository tests: insert, query, delete, migration v1→v2, `findByTmdbId` returns existing row
 
 ### U4 — TMDB search interface (Phase 3b)
@@ -831,11 +1168,18 @@ working doc.
 
 ### U6 — Full CRUD UI
 
-- SearchPage → SearchResultsPage → AddSheet flow
-- Edit sheet (tap MovieCard → EditSheet)
+- Search Page 5-state flow (State A → B → C → D → E; see §7.0–§7.6)
+- AddSheet as **State C inline** (not a separate `ModalBottomSheet`; see §7.3 + §6.9)
+- EditSheet as `ModalBottomSheet` triggered from `MovieCard.onTap` on Collection / Bucketlist pages (D-L6, §6.9)
+- ConfirmSelection as State E with Collection / Bucketlist toggle + per-item remove (Q2 E2)
+- 'X' close button + exit-confirm dialog at States C and E (§7.6)
+- URL: `/search?q=<query>&type=movie` (Q10)
+- 6 files under `lib/features/search/` (Q8; §7.9)
+- Media Filter button (Q4) opens Genre-only modal sheet on Collection / Bucketlist pages
+- Hamburger Menu stubs (Profile / Settings / Help / About; Q5)
+- MediaTypePage lists 6 types (Movies, TV Shows, Anime, Video Games, Books, Comics) with Movies-only-tappable (Q6)
+- ManualEntryForm at State B' when TMDB unavailable: Title + Year + Genre + Rating + Status, status defaults to Bucketlist (Q7, §7.8)
 - Delete confirmation
-- Pull-to-refresh scaffold
-- Offline behavior verified manually
 - 3-4 widget tests
 
 ### U7 — *(removed — TV Shows deferred to v2; see §18 v2a)*
@@ -843,32 +1187,41 @@ working doc.
 ### U8 — Polish
 
 - Material 3 theme finalized
-- **Single seed color** locked; dark theme shipped in v1, light palette derived from the same seed via `ColorScheme.fromSeed(seedColor: …, brightness: Brightness.light)` but not shipped
+- **Single seed color** locked; **both light and dark palettes shipped in v1**, derived from the same seed via `ColorScheme.fromSeed(seedColor: …, brightness: Brightness.{light,dark})` (D-L2). `themeMode: ThemeMode.system` (Q10 wiring).
 - Typography ramp: Source Serif 4 (display/headline) + Inter (title/body/label) via `google_fonts`
-- Material Symbols Rounded font bundled as asset; `IconData(fontFamily: 'MaterialSymbolsRounded', fontPackage: …)` used everywhere
+- Material Symbols Rounded font bundled as asset; `IconData(fontFamily: 'MaterialSymbolsRounded', fontPackage: 'media_tracker')` used everywhere
 - Spacing scale locked (8px baseline, 12px card padding, 16px gaps, 12dp card radius)
-- Dark theme verified
+- Both palettes verified (light + dark; OS-handler toggles between them)
 - Empty-state widgets
 - Accessibility pass (semantics labels, focus order)
 
 ### U9 — Wrap-up
 
-- `ROADMAP.md` documents v2 features + Supabase plan + migration plan
+- `PROJECT_PLAN.md` documents v2 features + Supabase plan + migration plan
 - One retrospective on locked decisions vs. original hunches
 
 ---
 
-## 15. Conventions recap
+## 15. Test Plan
 
-Carried over from `Users decisions & current progress.md` section H:
+Per the test-mirror rule, tests live next to the code they
+cover. Test mirror applies to `PROJECT_PLAN.md` §14 Done Definitions.
 
-- One commit per phase boundary — or per sub-phase when a phase contains
-  two independent concerns (e.g., Phase 3a schema + Phase 3b TMDB
-  client).
-- No comments in code unless explicitly requested.
-- Official packages only — no unverified third-party ones.
-- All dependency versions pinned exactly in `pubspec.yaml` to avoid drift
-  mid-build.
+| Phase | Layer | Test scope | ~Lines |
+|---|---|---|---|
+| 1 | Widget | CataloguePage renders two HubCards; tap Each navigates | ~20 |
+| 3a | Drift repository | insert, query, delete, migration v1→v2, `findByTmdbId` returns existing row | ~50 |
+| 4 | Riverpod providers | `moviesListProvider` reflects insert; `searchProvider` resolves | ~30 |
+| 5 | Widget UI | HubCards render; Search Page 5-state flow; Media Filter; EditSheet prefill; Delete confirm | ~80 |
+| 6 | Integration (optional) | "open app → add movie → see on hub" end-to-end | TBD |
+
+Total v1 test budget: **~180 lines** (slightly above the §12 target;
+reflects the wider surface added by the wireframes — Collection Page
+Statistics, Media Filter, Search Page 5 states, EditSheet, manual-entry
+form). Drift tests run on host against `NativeDatabase.memory()`
+(no emulator needed). Riverpod provider tests use
+`ProviderContainer.test` (Riverpod 3). Widget tests use
+`flutter_test`. Integration tests use `integration_test`.
 
 ---
 
@@ -882,8 +1235,8 @@ All decisions made in this planning session, locked at the time of writing.
 |---|---|---|
 | D1 | Product positioning | Unified tracker + local-first growth + social-as-core (community features are the long-term value, deferred to v2) |
 | D2 | v1 sharing | Deferred to v2 — v1 is personal-tracking only |
-| D3 | v1 bottom nav | Single-page for v1; nav ships with v2 |
-| D4 | Add-movie flow scope | TMDB search + results grid + AddSheet in v1; saved-search-session feature REMOVED |
+| D3 | v1 bottom nav | nav bar ships with v1 with home & catalogue buttons |
+| D4 | Add-movie flow scope | TMDB search + results grid + AddSheet + SimilarResults in v1; saved search sessions deferred to v2. |
 
 ### 16.2 Data
 
@@ -891,14 +1244,14 @@ All decisions made in this planning session, locked at the time of writing.
 |---|---|---|
 | D5 | Data model | Hybrid — `media_items` (base) + `*_details` (per type). Movie is the only v1 type. |
 | D6 | `media_items.type` storage | Plain `TEXT` — no CHECK or ENUM. Schema-change-free when widening type set. |
-| D7 | Status enum | **2 states** in v1: `onWatchlist`, `inCollection`. `onCollabLists` deferred to v2. The other three states (`currentlyConsuming`, `dropped`, `upcoming`) are added in v2 with the detail/edit sheet that surfaces them — see §5.2. |
-| D8 | Hub mapping | Strict 2-card (Collection = `inCollection`, To Consume = `onWatchlist`). |
+| D7 | Status enum | **2 states** in v1: `MediaStatus.onBucketlist`, `MediaStatus.inCollection`. `MediaStatus.onCollabLists` deferred to v2. The other three states (`currentlyConsuming`, `dropped`, `upcoming`) are added in v2 with the detail/edit sheet that surfaces them — see §5.2. Canonical UI label for `onBucketlist`: **"Bucketlist"** (D-L13; see D33). |
+| D8 | Hub mapping | Strict 2-card (Collection = `inCollection`, Bucketlist = `onBucketlist`). UI labels per wireframes in `images/`. |
 
 ### 16.3 Tech stack
 
 | # | Decision | Choice |
 |---|---|---|
-| D9 | TMDB client | `Dio` for v1, behind `MediaSearchClient` interface (`search({query, mediaType}) → List<MediaSearchResult>`). Swap to a regenerated client (e.g., `openapi_generator`) in v2 when all 12 media types ship — touches the impl only. |
+| D9 | TMDB client | `Dio` for v1, behind `MediaSearchClient` interface (`search({query, mediaType}) → List<MediaSearchResult>`). Swap to a regenerated client (e.g., `openapi_generator`) in v2 when v2 widens the type set to 6 (Movies + TV Shows + Anime + Video Games + Books + Comics) per the wireframe — touches the impl only. |
 | D10 | Theme | Material 3 + **single** custom seed color + intentional typography/spacing. Light + dark both derived from the same seed. Vivaldi-style customization stays v2. |
 | D11 | `copyWith` source | Drift-generated in Phase 3. Freezed wrapper is a future-refactor option (probably Phase 5/6 if sealed unions needed). |
 | D12 | v2 auth | **Supabase** (Postgres + Auth + RLS + Realtime + Storage). Open-source; Postgres-portable; cheap at scale; RLS purpose-built for community permissions. Migration to custom Python+Postgres is feasible (`pg_dump` + auth re-implementation, ~2 weeks). |
@@ -919,41 +1272,59 @@ review of the original plan. Each is locked at the time of writing.
 |---|---|---|
 | D15 | Material import strategy | `package:flutter/material.dart` while on Flutter 3.44.x. Migrate to `material_ui` / `cupertino_ui` first-party packages in a single dedicated commit on the next Flutter major bump. Tracking: flutter/flutter#184093. |
 | D16 | Image caching | `flutter_cache_manager` directly with `Image.network`, **not** `cached_network_image`. Reason: cached_network_image last released 23 months ago, publisher is `baseflow.com` (not Flutter team), active community concerns about maintenance — violates rule #7. `flutter_cache_manager` provides the same disk-cache primitive with no third-party UI dependency. |
-| D17 | Icons | **Material Symbols Rounded font, bundled as asset**. Use `IconData(fontFamily: 'MaterialSymbolsRounded', fontPackage: …)`. Reason: no official Flutter-team package wraps Material Symbols; bundling the Google-licensed font respects rule #7. |
+| D17 | Icons | **Material Symbols Rounded font, bundled as asset**. Use `IconData(fontFamily: 'MaterialSymbolsRounded', fontPackage: 'media_tracker')`. Reason: no official Flutter-team package wraps Material Symbols; bundling the **Apache License 2.0** font respects rule #7. |
 | D18 | Fonts | **`google_fonts`** for Source Serif 4 (display/headline) + Inter (title/body/label). Reason: verified publisher `flutter.dev` — satisfies rule #7. |
 | D19 | Seed color | **One** seed for both brightness modes. `ColorScheme.fromSeed(seedColor: …, brightness: Brightness.light/dark)` derives both palettes. Two seeds = visual whiplash on theme toggle. |
-| D20 | Status enum v1 | **2 states only** (`onWatchlist`, `inCollection`). The other 3 states (`currentlyConsuming`, `dropped`, `upcoming`) are added in v2 with the detail/edit sheet that surfaces them. Reason: storing values the UI cannot surface creates invisible QA debt; the trivial Drift migration cost is not worth paying in v1. |
-| D21 | Add-movie idempotency | Repository runs `findByTmdbId` before `INSERT`; throws `AlreadyInCollection` on hit. `SearchRepository` translates it into a user-facing snackbar ("Already in your Collection" / "Already on your To Consume list"). The unique index on `movie_details.tmdb_id` is the last-line defense. |
-| D22 | Provider per type | Locked table in §4.3. One provider per media type. No multi-provider reconciliation (e.g., a book in both Google Books and OpenLibrary uses only the canonical provider). Re-evaluated only when a new media type is added. |
+| D20 | Status enum v1 | **2 states only** (`MediaStatus.onBucketlist`, `MediaStatus.inCollection`). The other 3 states (`currentlyConsuming`, `dropped`, `upcoming`) are added in v2 with the detail/edit sheet that surfaces them. Reason: storing values the UI cannot surface creates invisible QA debt; the trivial Drift migration cost is not worth paying in v1. Canonical UI label for `onBucketlist` is "Bucketlist" (D-L13; see D33). |
+| D21 | Add-movie idempotency | Repository runs `findByTmdbId` before `INSERT`; throws `AlreadyInCollection` on hit. `SearchRepository` translates it into a user-facing snackbar ("Already in your Collection" / "Already on your Bucketlist"). The unique index on `movie_details.tmdb_id` is the last-line defense. Per §7.7. |
 | D23 | Games provider | **RAWG** (not IGDB). Reason: verified against [Twitch Developer Forum](https://discuss.dev.twitch.com/t/igdb-authentication-and-tokens-need-server-app/28394) that IGDB rate-limits at 4 req/s **per Client ID, not per user** — per-user Twitch OAuth does not give per-user rate-limit pools. RAWG's 20k req/month is predictable, requires no OAuth, and needs no proxy backend. |
 | D24 | Games attribution (v2) | Every page displaying RAWG data or images must include an active hyperlink back to RAWG (per [RAWG API ToS](https://rawg.io/apidocs)). Implementation: per-card "View on RAWG" link on `MovieCard`-equivalent for Games; or page-level footer. Locked when Games ships in v2. |
-| D25 | `source` + `imported_at` columns in v1 | `media_items.source TEXT NOT NULL DEFAULT 'manual'`; `media_items.imported_at DATETIME NULL`. Forward-compatible with v2 import — no v2 schema migration needed. NULL `imported_at` means manual; non-NULL means imported at that time. Migration pattern: §11.3. |
+| D25 | `source` + `imported_at` columns in v1 | `media_items.source TEXT NOT NULL DEFAULT 'manual'`; `media_items.imported_at DATETIME NULL`. Forward-compatible with v2 import — no v2 schema migration needed. NULL `imported_at` means manual; non-NULL means imported at that time. Columns ship in v1's initial schema (§4.1); no v1 migration is required. |
 | D26 | Backend mega-database lives on Supabase | `media_universe` table on Supabase Postgres, populated by ETL pipeline from each provider in §4.3. App queries via PostgREST/Realtime; falls back to provider APIs on miss. Strict separation from local `media_items` (§4.5). Join key: per-type external id columns. D12 is expanded: Supabase hosts both auth and the mega-DB. |
 | D27 | `resolveTitle` signature deferred to v2 | `MediaSearchClient` (§U4) is the integration point; actual `resolveTitle(String) → ...` signature is locked at v2 planning when the import pipeline shape is concrete. v1 interface is forward-compatible. |
 | D28 | `MediaType` enum v1 | Only `MediaType.movie` is valid in v1. `EnumNameConverter<MediaType>` wired at column level (see §4.4). Extension to `tv_show`, `anime`, etc. in v2 via the converter; no schema change required for `media_items.type` since it is plain TEXT. |
-| D29 | Routing library | `go_router` (verified publisher `flutter.dev`). Last release: 49 days ago, v17.3.0. Reason: Flutter Favorite; feature-complete; declarative routing. v1 ships a single `/` route (single-page per D3); v2 uses nested routes + deep links. License: BSD-3-Clause. |
+| D29 | Routing library | `go_router` (verified publisher `flutter.dev`). Last release: 49 days ago, v17.3.0. Reason: Flutter Favorite; feature-complete; declarative routing. v1 ships 11 go_router routes per §6.5 (Landing, Home, Catalogue, Collection, Bucketlist, Search, Profile, Media Type, Settings, Help, About). v2 widens to nested child routes and per-type deep links. License: BSD-3-Clause. |
+| D30 | `drift` | `simonbinder.eu` (verified). Last release: 2 days ago, v2.34.3. Reactive SQLite ORM for Flutter/Dart; v1 data layer (`media_items` + `movie_details` tables). Flutter Favorite; MIT; transitively pulls `sqlite3` 3.x. Phase 3a. |
+| D31 | `drift_dev` | `simonbinder.eu` (verified). Last release: 7 days ago, v2.34.5. Dev-dependency for `drift`; codegen via `build_runner`. MIT. Companion to D30; not in runtime deps. Phase 3a. |
+| D32 | `build_runner` | `tools.dart.dev` (verified; official Dart team). Last release: 2 days ago, v2.15.3. Build system for Dart code generation; runs `drift_dev` codegen. BSD-3-Clause. Outputs `.g.dart` files into `lib/`. Phase 3a. |
+| D33 | Status enum & UI label canonicalization | **Renames**: `MediaStatus.onWatchlist` → `MediaStatus.onBucketlist`; UI label `'Bucket List'` → `'Bucketlist'`; file `bucket_list_page.dart` → `bucketlist_page.dart`. Source of truth: the wireframes in `images/`. Affected files: `lib/features/catalogue/data/movie_status.dart` (the enum file), `lib/features/catalogue/catalogue_page.dart` (the AppBar label), `lib/features/catalogue/bucket_list_page.dart` → `bucketlist_page.dart`. Renames cascade into the tutor doc set (`new_agent_docs_tutor/01-project-overview.md`, `02-architecture.md`, `03-code-standards.md`, `05-phases.md`, `06-concepts-and-links.md`, `07-progress-tracker.md`) — deferred per the user's direction. |
 
 ---
 
-## 17. Next step
+## 17. Glossary
 
-**Phase 1, Step 2** — `lib/features/catalogue/data/sample_movies.dart`.
-About 30 lines: 5 `const Movie(...)` entries + two getters
-(`collectedMovies`, `toConsumeMovies`) filtering by `status`.
+The technical terms used throughout this plan. Cross-reference:
+`current_agent_docs_tutor/06-CONCEPTS-AND-GLOSSARY.md` for the deeper
+Flutter / Drift / Riverpod glossary; this section is the project-level
+vocabulary.
 
-When ready to move to Phase 3, the Data Model changes above are the
-source of truth; cross-reference `Users decisions & current progress.md`
-for the prior progress.
+| Term | Meaning |
+|---|---|
+| `media_item` | The central entity tracked by the app. In v1, always a Movie. Stored in `media_items` (Drift table). User-facing label "movie" in v1. |
+| `status` | The 2-state enum: `MediaStatus.onBucketlist` / `MediaStatus.inCollection`. UI labels: "Bucketlist" / "Collection". |
+| `hub` | The Catalogue Page (the wireframe's central screen, with 2 HubCards). Distinct from "list" — the hub never shows individual items, only HubCards pointing at filtered lists. |
+| `HubCard` | One of the two large cards on the Catalogue Page: Collection or Bucketlist. |
+| `Search Page` | Full-page route at `/search?q=<query>&type=movie`. State machine A → B → C → D → E. 'X' closes; exit-confirm at C and E. |
+| `AddSheet` | **State C** of the Search Page; rendered inline, not as a `ModalBottomSheet`. Status toggle (Collection / Bucketlist) + 0–10 rating. |
+| `EditSheet` | `ModalBottomSheet` triggered from `MovieCard.onTap`. Same fields as AddSheet, prefilled with the existing data. Has Delete action. |
+| `ConfirmSelection` | **State E** of the Search Page; toggle Collection/Bucketlist at top, per-item remove, "Add to \<Destination\>" button at bottom. |
+| `ManualEntryForm` | Replaces Search Page State B when TMDB unreachable. Title (required) + Year + Genre + Rating + Status (defaults to Bucketlist). |
+| `TMDB` | The Movie Database. Read-only external metadata provider in v1. |
+| `drift` | SQLite ORM used for persistence. Generates typesafe Dart from table definitions. |
+| `Riverpod 3` | State-management library. `ProviderScope`, `Notifier`, `AsyncNotifier`. |
+| `go_router` | Declarative routing library. v1 ships 11 routes per §6.5. |
+| `AppShell` | The persistent scaffolding (theme + chrome) wrapping every page. The `AppScaffold` widget in `lib/shared/`. |
+| `MediaType` enum | v1 = `MediaType.movie` only. `EnumNameConverter<MediaType>` at column level. v2 widens to `tv_show`, `anime`, etc. |
 
 ---
 
 ## 18. v2 and v3 Phases
 
-v1 ships Movies only (I1). v2 widens the type set to TV Shows, Anime,
-Books, Games, Podcasts, Comics, Documentaries, Music videos, K-Drama,
-and Cartoons; adds a Supabase backend, sharing, community circles, and
-import pipelines. v3 adds cross-platform targets (iOS, Web, Desktop)
-and customizable theming.
+v1 ships Movies only (I1). v2 widens the type set to TV Shows,
+Anime, Video Games, Books, and Comics (per the wireframe's
+Landing Page in `images/`); adds a Supabase backend, sharing,
+community circles, and import pipelines. v3 adds cross-platform
+targets (iOS, Web, Desktop) and customizable theming.
 
 The slots below are placeholders. Each phase entry is filled in
 when v2/v3 work begins; the user (or the tutor, with the user
